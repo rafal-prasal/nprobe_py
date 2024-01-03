@@ -1,0 +1,16 @@
+FROM debian:bullseye
+
+ENV LANG C.UTF-8
+RUN \
+  apt update \
+  && apt upgrade -y \
+  && apt install -y -q wget lsb-release gnupg \
+  && cd /tmp \
+  && wget --quiet https://packages.ntop.org/RaspberryPI/bullseye_pi/all/ntopng-data/ntopng-data_6.1.231231_all.deb \
+  && wget --quiet https://packages.ntop.org/RaspberryPI/bullseye_pi/arm64/ntopng/ntopng_6.1.231231-22516_arm64.deb \
+  && apt install -y ./ntopng-data_6.1.231231_all.deb \
+  && apt install -y ./ntopng_6.1.231231-22516_arm64.deb \
+  && apt clean \
+  && rm -rf /tmp/* \
+  && rm -rf /var/tmp/* \
+  && rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,18 @@
+FROM debian:bookworm
+
+ENV LANG C.UTF-8 
+
+COPY nprobe_py.py /nprobe_py.py
+
+RUN \ 
+  apt-get update \ 
+  && apt-get upgrade -y \
+  && apt-get install -y -q \
+        python3 \
+        python3-pip \
+  && pip install --break-system-packages pyzmq \
+  && pip cache purge \
+  && apt-get clean \ 
+  && rm -rf /tmp/* \ 
+  && rm -rf /var/tmp/* \
+  && rm -rf /var/lib/apt/lists/*

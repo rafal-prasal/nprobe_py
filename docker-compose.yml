@@ -1,0 +1,37 @@
+version: '3' 
+
+services: 
+  nprobe_py:
+    image: nprobe_py:latest
+    command: [
+        "/nprobe_py.py",
+        "--performance",
+        "--ntopng", "tcp://*:1234",
+        "--collector-port", "udp://0.0.0.0:2055"
+    ]
+    ports:
+      - 2055:2055/udp
+    build:
+      context: ./
+      dockerfile: Dockerfile.nprobe_py
+
+  redis: 
+    image: "redis:alpine" 
+
+  ntopng: 
+    image: "ntop:latest"
+    command: [
+        "ntopng",
+        '--community',
+        "--redis", "redis",
+        "--interface", "tcp://nprobe_py:1234" ,
+        '--local-networks', '192.168.1.0/24=LAN,192.168.88.0/24=LAN2,10.1.1.0/24=LAN_SENSORS'
+    ]
+    ports:
+      - "3000:3000" 
+    depends_on: 
+      - redis
+    build:
+      context: ./
+      dockerfile: Dockerfile.ntopng
+
