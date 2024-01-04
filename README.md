@@ -52,7 +52,7 @@ or in the backround
 
 \1 Go to Web ui
 
-    http://{microtik}
+    http://{mikrotik}
 
 \2 Navigate through menu
 
