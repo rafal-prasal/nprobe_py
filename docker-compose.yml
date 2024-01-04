@@ -19,7 +19,7 @@ services:
     image: "redis:alpine" 
 
   ntopng: 
-    image: "ntop:latest"
+    image: "ntopng:latest"
     command: [
         "ntopng",
         '--community',
