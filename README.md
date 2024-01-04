@@ -11,7 +11,7 @@ Code found here is like "Cutting the grass with machete" and definitely could be
 ## Usage:
 ### Build images
 
-    doker-compose build
+    docker-compose build
     #or
     docker compose build
 
