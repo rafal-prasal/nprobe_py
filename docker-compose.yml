@@ -31,6 +31,7 @@ services:
       - "3000:3000" 
     depends_on: 
       - redis
+      - nprobe_py
     build:
       context: ./
       dockerfile: Dockerfile.ntopng
