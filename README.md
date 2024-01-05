@@ -43,12 +43,41 @@ or in the backround
 
     http://{host}:3000
 
+    Settings -> Preferences -> Expert View 
+                            -> Network Interfaces ->
+                                Use Post-Nat Destination IPv4 Addresses and Ports [ X ]
+                                Use Post-Nat Source IPv4 Addresses and Ports [ X ]
+                                
+
 #### NetFlow/IPFIX collector
 
     udp://{host}:2055
 
-### How to configure NetFlow/IPFIX stream
-#### Mikrotik 7.X
+### Additional Configuration NetFlow/IPFIX stream
+
+#### ntopng and NAT
+
+\1 Go to Web ui
+
+    http://{host}:3000
+
+\2 navigate through menu
+
+    Settings -> Preferences 
+
+\3 click Expert View
+
+\4 go further through menu
+
+    Network Interfaces
+
+\5 check options
+    Use Post-Nat Destination IPv4 Addresses and Ports: [ X ]
+    Use Post-Nat Source IPv4 Addresses and Ports: [ X ]
+
+\6 click save
+
+#### Mikrotik 7.X for NetFlow/IPFIX stream
 
 \1 Go to Web ui
 

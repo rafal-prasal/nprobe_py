@@ -54,156 +54,479 @@ def ipv6address(bytes):
     return ipaddress.IPv6Address(bytes).exploded
 
 fields = {
-    0:  { 'name': 'reserved',
-          'from_bytes': unknown,
+    0:  { 
+        'name': 'reserved',
+        'from_bytes': unknown,
     },
 
-    1:  { 'name': 'octetDeltaCount',
-          'from_bytes': unsigned,
-          'nprobe': 'IN_BYTES'
+    1:  { 
+        'name': 'octetDeltaCount',
+        'from_bytes': unsigned,
+        'nprobe': 'IN_BYTES'
     },
 
-    2:  { 'name': 'packetDeltaCount',
-          'from_bytes': unsigned,
-          'nprobe': 'IN_PKTS'
+    2:  {
+        'name': 'packetDeltaCount',
+        'from_bytes': unsigned,
+        'nprobe': 'IN_PKTS'
     },
 
-    3:  { 'name': 'reserved',
-          'from_bytes': unknown
+    3:  {
+        'name': 'reserved',
+        'from_bytes': unknown
     },
 
-    4:  { 'name': 'protocolIdentifier',
-          'from_bytes': unsigned,
-          'nprobe': 'PROTOCOL'
+    4:  {
+        'name': 'protocolIdentifier',
+        'from_bytes': unsigned,
+        'nprobe': 'PROTOCOL'
     },
 
-    5:  { 'name': 'ipClassOfService',
-          'from_bytes': unsigned,
+    5:  {
+        'name': 'ipClassOfService',
+        'from_bytes': unsigned,
+        'nprobe': 'SRC_TOS'
     },
 
-    6:  { 'name': 'tcpControlBits',
-          'from_bytes': unsigned
+    6:  {
+        'name': 'tcpControlBits',
+        'from_bytes': unsigned,
+        'nprobe': 'TCP_FLAGS'
     },
 
-    7:  { 'name': 'sourceTransportPort',
-          'from_bytes': unsigned,
-          'nprobe': 'L4_SRC_PORT'
+    7:  {
+        'name': 'sourceTransportPort',
+        'from_bytes': unsigned,
+        'nprobe': 'L4_SRC_PORT'
     },
 
-    8:  { 'name': 'sourceIPv4Address',
-          'from_bytes': ipv4address,
-          'nprobe': 'IPV4_SRC_ADDR'
+    8:  {
+        'name': 'sourceIPv4Address',
+        'from_bytes': ipv4address,
+        'nprobe': 'IPV4_SRC_ADDR'
     },
 
-    9:  { 'name': 'sourceIPv4PrefixLength',
-          'from_bytes': unsigned
-
+    9:  {
+        'name': 'sourceIPv4PrefixLength',
+        'from_bytes': unsigned,
+        'nprobe': 'IPV4_SRC_MASK'
     },
 
-    10: { 'name': 'ingressInterface',
-          'from_bytes': unsigned
+    10: {
+        'name': 'ingressInterface',
+        'from_bytes': unsigned,
+        'nprobe': 'INPUT_SNMP'
     },
 
-    11: { 'name': 'destinationTransportPort',
-          'from_bytes': unsigned,
-          'nprobe': 'L4_DST_PORT'
+    11: {
+        'name': 'destinationTransportPort',
+        'from_bytes': unsigned,
+        'nprobe': 'L4_DST_PORT'
     },
    
-    12: { 'name': 'destinationIPv4Address',
-          'from_bytes': ipv4address,
-          'nprobe': 'IPV4_DST_ADDR'
+    12: {
+        'name': 'destinationIPv4Address',
+        'from_bytes': ipv4address,
+        'nprobe': 'IPV4_DST_ADDR'
     },
-    13: { 'name': 'destinationIPv4PrefixLength',
-          'from_bytes': unsigned
-    },
-
-    14: { 'name': 'egressInterface',
-          'from_bytes': unsigned
-    },
-
-    15: { 'name': 'ipNextHopIPv4Address',
-          'from_bytes': ipv4address,
+    13: {
+        'name': 'destinationIPv4PrefixLength',
+        'from_bytes': unsigned,
+        'nprobe': 'IPV4_DST_MASK'
     },
 
-    21: { 'name': 'flowEndSysUpTime',
-          'from_bytes': unsigned
+    14: {
+        'name': 'egressInterface',
+        'from_bytes': unsigned,
+        'nprobe': 'OUTPUT_SNMP'
     },
 
-    22: { 'name': 'flowStartSysUpTime',
-          'from_bytes': unsigned
+    15: {
+        'name': 'ipNextHopIPv4Address',
+        'from_bytes': ipv4address,
+        'nprobe': 'IPV4_NEXT_HOP'
     },
 
-    27: { 'name': 'sourceIPv6Address',
-          'from_bytes': ipv6address,
-          'nprobe': 'IPV6_SRC_ADDR'
+    16: {
+        'name': 'bgpSourceAsNumber',
+        'from_bytes': unsigned,
+        'nprobe': 'SRC_AS'
+        },
+
+    17: {
+        'name': 'DST_AS',
+        'from_bytes': unsigned,
+        'nprobe': 'DST_AS'
     },
 
-    28: { 'name': 'destinationIPv6Address',
-          'from_bytes': ipv6address,
-          'nprobe': 'IPV6_DST_ADDR'
+    18: {
+        'name': 'bgpNexthopIPv4Address',
+        'from_bytes': ipv4address,
+        'nprobe': 'BGP_IPV4_NEXT_HOP'
     },
 
-    29: { 'name': 'sourceIPv6PrefixLength',
-          'from_bytes': unknown,
+    21: {
+        'name': 'flowEndSysUpTime',
+        'from_bytes': unsigned,
+        'nprobe': 'LAST_SWITCHED'
     },
 
-    30: { 'name': 'destinationIPv6PrefixLength',
-          'from_bytes': unknown
+    22: {
+        'name': 'flowStartSysUpTime',
+        'from_bytes': unsigned,
+        'nprobe': 'FIRST_SWITCHED'
     },
 
-    31: { 'name': 'flowLabelIPv6',
-          'from_bytes': unknown
+    27: {
+        'name': 'sourceIPv6Address',
+        'from_bytes': ipv6address,
+        'nprobe': 'IPV6_SRC_ADDR'
     },
 
-    33: { 'name': 'igmpType',
-          'from_bytes': unsigned
+    28: {
+        'name': 'destinationIPv6Address',
+        'from_bytes': ipv6address,
+        'nprobe': 'IPV6_DST_ADDR'
     },
 
-    56: { 'name': 'sourceMacAddress',
-          'from_bytes': macaddress,
-          'nprobe': 'IN_SRC_MAC'
+    29: {
+        'name': 'sourceIPv6PrefixLength',
+        'from_bytes': unsigned,
+        'nprobe': 'IPV6_SRC_MASK'
     },
 
-    57: { 'name': 'postDestinationMacAddress',
-          'from_bytes': macaddress,
-          'nprobe': 'OUT_DST_MAC'
+    30: {
+        'name': 'destinationIPv6PrefixLength',
+        'from_bytes': unsigned,
+        'nprobe': 'IPV6_DST_MASK'
     },
 
-    60: { 'name': 'ipVersion',
-          'from_bytes': unsigned,
-          'nprobe': 'IP_PROTOCOL_VERSION'
+    31: {
+        'name': 'flowLabelIPv6',
+        'from_bytes': unknown
     },
 
-    62: { 'name': 'ipNextHopIPv6Address',
-          'from_bytes': unknown
+    32: {
+        'name':  'icmpTypeCodeIPv4',
+        'from_bytes': unsigned,
+        'nprobe': 'ICMP_TYPE'
     },
 
-    80: { 'name': 'destinationMacAddress',
-          'from_bytes': macaddress
+
+    33: {
+        'name': 'igmpType',
+        'from_bytes': unsigned
     },
 
-    81: { 'name': 'postSourceMacAddress',
-          'from_bytes': macaddress
+    34: {
+        'name': 'SAMPLING_INTERVAL',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLING_INTERVAL'
     },
 
-    160: { 'name': 'systemInitTimeMilliseconds',
-          'from_bytes': unsigned
+    35: {
+        'name': 'SAMPLING_ALGORITHM',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLING_ALGORITHM'
+    },
+
+    36: {
+        'name': 'flowActiveTimeout',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_ACTIVE_TIMEOUT'
+    },
+
+    37: {
+        'name': 'flowIdleTimeout',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_INACTIVE_TIMEOUT'
+    },
+
+
+    38: {
+        'name': 'ENGINE_TYPE',
+        'from_bytes': unsigned,
+        'nprobe': 'ENGINE_TYPE'
+    },
+
+    39: {
+        'name': 'ENGINE_ID',
+        'from_bytes': unsigned,
+        'nprobe': 'ENGINE_ID'
+    },
+
+    40: {
+        'name': 'exportedOctetTotalCount',
+        'from_bytes': unsigned,
+        'nprobe': 'TOTAL_BYTES_EXP'
+    },
+
+    41: {
+        'name': 'exportedMessageTotalCount',
+        'from_bytes': unsigned,
+        'nprobe': 'TOTAL_PKTS_EXP'
+    },
+
+    42: {
+        'name': 'exportedFlowRecordTotalCount',
+        'from_bytes': unsigned,
+        'nprobe': 'TOTAL_FLOWS_EXP'
+    },
+
+    52: {
+        'name': 'minimumTTL',
+        'from_bytes': unsigned,
+        'nprobe': 'TOTAL_FLOWS_EXP'
+    },
+
+    53: {
+        'name': 'MIN_TTL',
+        'from_bytes': unsigned,
+        'nprobe': 'MAX_TTL'
+    },
+
+    55: {
+        'name': 'ipClassOfService',
+        'from_bytes': unsigned,
+        'nprobe': 'DST_TOS'
+    },
+
+    56: {
+         'name': 'sourceMacAddress',
+         'from_bytes': macaddress,
+         'nprobe': 'IN_SRC_MAC'
+    },
+
+    57: {
+         'name': 'postDestinationMacAddress',
+         'from_bytes': macaddress,
+         'nprobe': 'OUT_DST_MAC'
+    },
+
+    58: {
+         'name': 'vlanId',
+         'from_bytes': unsigned,
+         'nprobe': 'SRC_VLAN'
+    },
+
+    59: {
+         'name': 'postVlanId',
+         'from_bytes': unsigned,
+         'nprobe': 'DST_VLAN'
+    },
+
+    60: {
+         'name': 'ipVersion',
+         'from_bytes': unsigned,
+         'nprobe': 'IP_PROTOCOL_VERSION'
+    },
+    61: {
+        'name': 'flowDirection',
+        'from_bytes': unsigned,
+        'nprobe': 'DIRECTION'
+    },
+
+    62: {
+        'name': 'ipNextHopIPv6Address',
+        'from_bytes': ipv6address,
+        'nprobe': 'IPV6_NEXT_HOP'
+    },
+
+    70: {
+        'name': 'mplsTopLabelStackSection',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_1'
+    },
+
+    71: {
+        'name': 'mplsLabelStackSection2',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_2'
+    },
+
+    72: {
+        'name': 'mplsLabelStackSection3',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_3'
+    },
+
+    73: {
+        'name': 'mplsLabelStackSection4',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_4'
+    },
+
+    74: {
+        'name': 'mplsLabelStackSection5',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_5'
+    },
+
+    75: {
+        'name': 'mplsLabelStackSection6',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_6'
+    },
+
+    76: {
+        'name': 'mplsLabelStackSection7',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_7'
+    },
+
+    77: {
+        'name': 'mplsLabelStackSection8',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_8'
+    },
+
+    78: {
+        'name': 'mplsLabelStackSection9',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_9'
+    },
+
+    79: {
+        'name': 'mplsLabelStackSection10',
+        'from_bytes': unsigned,
+        'nprobe': 'MPLS_LABEL_10'
+    },
+
+    80: { 
+        'name': 'destinationMacAddress',
+        'from_bytes': macaddress,
+        'nprobe': 'IN_DST_MACADDRESS'
+    },
+
+    81: {
+        'name': 'postSourceMacAddress',
+        'from_bytes': macaddress,
+        'nprobe': 'OUT_SRC_MAC'
+    },
+
+    82: { 
+        'name': 'interfaceName',
+        'from_bytes': str,
+        'nprobe': 'INTERFACE_NAME'
+    },
+
+    95: { 
+        'name': 'application_id',
+        'from_bytes': unsigned,
+        'nprobe': 'APPLICATION_ID'
+    },
+
+    102: {
+        'name': 'PACKET_SECTION_OFFSET',
+        'from_bytes': unsigned,
+        'nprobe': 'PACKET_SECTION_OFFSET'
+    },
+
+    103: {
+        'name': 'SAMPLED_PACKET_SIZE',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLED_PACKET_SIZE'
+    },
+
+    104: {
+        'name': 'SAMPLED_PACKET_ID',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLED_PACKET_ID'
+    },
+
+    130: {
+        'nprobe': 'EXPORTER_IPV4_ADDRESS',
+        'from_bytes': ipv4address,
+        'name': 'exporterIPv4Address'
+    },
+
+    131: {
+        'nprobe': 'EXPORTER_IPV6_ADDRESS',
+        'from_bytes': ipv6address,
+        'name': 'exporterIPv6Address'
+    },
+
+    148: {
+        'name': 'flowId',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_ID'
+    },
+
+    150: {
+        'name': 'flowStartSeconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_START_SEC'
+    },
+
+    151: {
+        'name': 'flowEndSeconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_END_SEC'
+    },
+
+    152: {
+        'name': 'flowStartMilliseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_START_MILLISECONDS'
+    },
+
+    153: {
+        'name': 'flowEndMilliseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_END_MILLISECONDS'
+    },
+
+    154: {
+        'name': 'flowStartMicroseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_START_MILLISECONDS'
+    },
+
+    155: {
+        'name': 'flowEndMicroseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_END_MICROSECONDS'
+    },
+
+    160: { 
+        'name': 'systemInitTimeMilliseconds',
+        'from_bytes': unsigned,
 	},
-    176: { 'name': 'icmpTypeIPv4',
-           'from_bytes': unsigned
+
+    161: {
+        'name': 'flowDurationMilliseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_DURATION_MILLISECONDS'
     },
 
-    177: { 'name': 'icmpCodeIPv4', 
-           'from_bytes': unsigned
+    162: {
+        'name': 'flowDurationMicroseconds',
+        'from_bytes': unsigned,
+        'nprobe': 'FLOW_DURATION_MICROSECONDS'
     },
 
-    178: { 'name': 'icmpTypeIPv6',
-           'from_bytes': unknown
+
+    176: {
+        'name': 'icmpTypeIPv4',
+        'from_bytes': unsigned,
+        'nprobe': 'ICMP_IPV4_TYPE'
+    },
+
+    177: {
+        'name': 'icmpCodeIPv4', 
+        'from_bytes': unsigned,
+        'nprobe': 'ICMP_IPV4_TYPE'
+
+    },
+
+    178: {
+        'name': 'icmpTypeIPv6',
+        'from_bytes': unknown
     },
     
-
-    179: { 'name': 'icmpCodeIPv6',
-           'from_bytes': unknown
+    179: {
+        'name': 'icmpCodeIPv6',
+        'from_bytes': unknown
     },
 
     184: { 'name': 'tcpSequenceNumber',
@@ -234,20 +557,136 @@ fields = {
            'from_bytes': unsigned
     },
 
-    224: { 'name': 'ipTotalLength',
-           'from_bytes': unsigned
+    224: {
+         'name': 'ipTotalLength',
+         'from_bytes': unsigned
     },
-    225: { 'name': '???',
-           'from_bytes': unsigned
+
+    225: {
+         'name': 'postNATSourceIPv4Address',
+         'from_bytes': ipv4address,
+         'nprobe': 'POST_NAT_SRC_IPV4_ADDR'
     },
-    226: { 'name': '???',
-           'from_bytes': unsigned
+
+    226: {
+         'name': 'postNATDestinationIPv4Address',
+         'from_bytes': ipv4address,
+         'nprobe': 'POST_NAT_DST_IPV4_ADDR'
     },
-    227: { 'name': 'srcPORT',
-           'from_bytes': unsigned
+
+    227: {
+         'name': 'postNAPTSourceTransportPort',
+         'from_bytes': unsigned,
+         'nprobe': 'POST_NAPT_SRC_TRANSPORT_PORT'
     },
-    228: { 'name': 'dstPORT',
-           'from_bytes': unsigned
+
+    228: {
+        'name': 'postNAPTDestinationTransportPort',
+        'from_bytes': unsigned,
+        'nprobe': 'POST_NAPT_DST_TRANSPORT_PORT'
+    },
+
+    229: {
+        'name': 'natOriginatingAddressRealm',
+        'from_bytes': unsigned,
+        'nprobe': 'NAT_ORIGINATING_ADDRESS_REALM'
+    },
+
+    230: {
+        'name': 'natEvent',
+        'from_bytes': unsigned,
+        'nprobe': 'NAT_EVENT'
+    },
+
+    233: {
+        'name': 'firewallEvent',
+        'from_bytes': unsigned,
+        'nprobe': 'FIREWALL_EVENT'
+    },
+
+    234: {
+        'name': 'ingressVRFID',
+        'from_bytes': unsigned,
+        'nprobe': 'INGRESS_VRFID'
+    },
+
+    239: {
+        'name': 'biflow_direction',
+        'from_bytes': unsigned,
+        'nprobe': 'BIFLOW_DIRECTION'
+    },
+
+    243: {
+        'name': 'dot1qVlanId',
+        'from_bytes': unsigned,
+        'nprobe': 'DOT1Q_SRC_VLAN'
+    },
+
+    254: {
+        'name': 'postdot1qVlanId',
+        'from_bytes': unsigned,
+        'nprobe': 'DOT1Q_DST_VLAN'
+    },
+
+    277: {
+        'name': 'OBSERVATION_POINT_TYPE',
+        'from_bytes': unsigned,
+        'nprobe': 'OBSERVATION_POINT_TYPE'
+    },
+
+    300: {
+        'name': 'OBSERVATION_POINT_ID',
+        'from_bytes': unsigned,
+        'nprobe': 'OBSERVATION_POINT_ID'
+    },
+
+    302: {
+        'name': 'SELECTOR_ID',
+        'from_bytes': unsigned,
+        'nprobe': 'SELECTOR_ID'
+    },
+
+    304: {
+        'name': 'IPFIX_SAMPLING_ALGORITHM',
+        'from_bytes': unsigned,
+        'nprobe': 'IPFIX_SAMPLING_ALGORITHM'
+    },
+
+    309: {
+        'name': 'SAMPLING_SIZE',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLING_SIZE'
+    },
+
+    310: {
+        'name': 'SAMPLING_POPULATION',
+        'from_bytes': unsigned,
+        'nprobe': 'SAMPLING_POPULATION'
+    },
+
+
+    312: {
+        'name': 'FRAME_LENGTH',
+        'from_bytes': unsigned,
+        'nprobe': 'FRAME_LENGTH'
+    },
+
+    318: {
+        'name': 'PACKETS_OBSERVED',
+        'from_bytes': unsigned,
+        'nprobe': 'PACKETS_OBSERVED'
+    },
+
+    319: {
+        'name': 'PACKETS_SELECTED',
+        'from_bytes': unsigned,
+        'nprobe': 'PACKETS_SELECTED'
+    },
+
+    335: {
+        'name': 'SELECTOR_NAME',
+        'from_bytes': unsigned,
+        'nprobe': 'SELECTOR_NAME'
     },
 }
 
@@ -322,7 +761,7 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                         field_enterprise=None
 
                         if field_id & 0x8000:
-                            field_entterprise=int.from_bytes(message[field_offset+4:field_offset+8],'big')
+                            field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
                             field_offset=field_offset+4
                       
                         rec_len=rec_len+field_length
@@ -379,6 +818,12 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     +str(end_queueing-end_processing)
                 )
 
+
+def translate_netflow_to_ntopng ( record ):
+
+
+
+    return record_out
 
 def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_performance, q):
 
@@ -501,4 +946,6 @@ if __name__ == '__main__':
 
     rec_queue.put(None)
     p.join()
+
+    print("Exiting")
 

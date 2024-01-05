@@ -25,13 +25,15 @@ services:
         '--community',
         "--redis", "redis",
         "--interface", "tcp://nprobe_py:1234" ,
-        '--local-networks', '192.168.1.0/24=LAN,192.168.88.0/24=LAN2,10.1.1.0/24=LAN_SENSORS'
+        '--local-networks', '192.168.1.0/24=LAN,10.1.1.0/24=LAN_SENSORS'
     ]
     ports:
       - "3000:3000" 
     depends_on: 
       - redis
       - nprobe_py
+    volumes: 
+      - ./vol_ntopng:/var/lib/ntopng:rw
     build:
       context: ./
       dockerfile: Dockerfile.ntopng
