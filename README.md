@@ -43,17 +43,12 @@ or in the backround
 
     http://{host}:3000
 
-    Settings -> Preferences -> Expert View 
-                            -> Network Interfaces ->
-                                Use Post-Nat Destination IPv4 Addresses and Ports [ X ]
-                                Use Post-Nat Source IPv4 Addresses and Ports [ X ]
-                                
 
 #### NetFlow/IPFIX collector
 
     udp://{host}:2055
 
-### Additional Configuration NetFlow/IPFIX stream
+### Additional Configuration
 
 #### ntopng and NAT
 
