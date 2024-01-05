@@ -72,6 +72,7 @@ or in the backround
     Network Interfaces
 
 \5 check options
+
     Use Post-Nat Destination IPv4 Addresses and Ports: [ X ]
     Use Post-Nat Source IPv4 Addresses and Ports: [ X ]
 
