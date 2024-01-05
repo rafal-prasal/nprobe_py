@@ -818,13 +818,6 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     +str(end_queueing-end_processing)
                 )
 
-
-def translate_netflow_to_ntopng ( record ):
-
-
-
-    return record_out
-
 def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_performance, q):
 
     context = zmq.Context.instance()
