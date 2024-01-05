@@ -17,6 +17,8 @@ services:
 
   redis: 
     image: "redis:alpine" 
+    volumes:
+      - ./vol_redis:/data:rw
 
   ntopng: 
     image: "ntopng:latest"
