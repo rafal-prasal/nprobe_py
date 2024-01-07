@@ -35,7 +35,8 @@ if sys.version_info[0] == 3:
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', buf_arg)
 sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', buf_arg)
 
-#https://www.rfc-editor.org/rfc/rfc5102.html
+#https://www.rfc-editor.org/rfc/rfc7011
+#https://www.rfc-editor.org/rfc/rfc7012
 #https://www.iana.org/assignments/ipfix/ipfix.xhtml
 
 def unknown(bytes):
@@ -60,7 +61,7 @@ def ipv6address(bytes):
 #https://www.ntop.org/guides/nprobe/flow_information_elements.html
 #https://www.iana.org/assignments/ipfix/ipfix.xhtml
 IPFIX_fields = {
-    -1: {#IANA
+    -1: {           #default Enterprise
         1:  { 
             'name': 'octetDeltaCount',
             'from_bytes': unsigned,
@@ -597,7 +598,7 @@ IPFIX_fields = {
             'nprobe': 'SELECTOR_NAME'
         },
     },
-    35632: {#NTOP
+    35632: {    #NTOP
         1028: {
             'name': 'PROTOCOL_MAP',
             'from_bytes': str,
@@ -1087,6 +1088,17 @@ def parseAddress(address):
 
     return  (ipv4, port)
 
+def IPFIX_scan_field(message, field_offset):
+    field_id=int.from_bytes(message[field_offset:field_offset+2],'big')
+    field_length=int.from_bytes(message[field_offset+2:field_offset+4],'big')
+    field_enterprise=-1
+
+    if field_id & 0x8000:
+        field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
+        field_id = field_id ^ 0x8000
+
+    return (field_id, field_length, field_enterprise)
+
 def netflow_collector(args_collector_port, args_verbose, args_performance, q):
     templates={}
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1142,20 +1154,15 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
 
                     rec_len=0
                     for i in range(field_count):
-                        field_id=int.from_bytes(message[field_offset:field_offset+2],'big')
-                        field_length=int.from_bytes(message[field_offset+2:field_offset+4],'big')
-                        field_enterprise=-1
-
-                        if field_id & 0x8000:
-                            field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
-                            field_id = field_id ^ 0x8000
-                            field_offset=field_offset+4
+                        (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset) 
                       
                         rec_len=rec_len+field_length
 
                         field_list.append((field_id, field_length, field_enterprise))
 
                         field_offset=field_offset+4
+                        if(field_enterprise) != -1:
+                            field_offset=field_offset+4
 
                     templates[ template_id ] = {
                          'fields': field_list,
@@ -1164,6 +1171,37 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
 
                     rec_offset=field_offset
                 set_offset=rec_offset
+
+            elif set_id == 3:
+                template_id=int.from_bytes(message[rec_offset:rec_offset+2],'big')
+                field_count=int.from_bytes(message[rec_offset+2:rec_offset+4],'big')
+                scope_count=int.from_bytes(message[rec_offset+4:rec_offset+6],'big')
+
+                print('NetFlow:'+ str(pkt_cnt)+ ' opt:'+str(template_id)+' num:' + str(field_count) + 'scp:' + str(scope_count))
+
+                if field_count==0:
+                    del templates[template_id]
+                    set_offset=set_offset+4
+                    continue
+
+                field_offset=rec_offset+6
+
+                rec_len=0
+                for s in range(field_count):
+                    (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset)
+
+                    rec_len=rec_len+field_length
+
+                    field_list.append((field_id, field_length, field_enterprise))
+
+                    field_offset=field_offset+4
+                    if(field_enterprise) != -1:
+                        field_offset=field_offset+4
+
+                templates[ template_id ] = {
+                     'fields': field_list,
+                     'length': rec_len
+                }
 
             elif set_id in templates:
                 rec_offset=set_offset
@@ -1210,7 +1248,7 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     +str(end_queueing-end_processing)
                 )
 
-def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_performance, q):
+def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_performance, args_zmq_source_id, q):
 
     context = zmq.Context.instance()
     socket = context.socket(zmq.PUB)
@@ -1231,12 +1269,12 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_per
 
     version=2
 
-    zmq_msg_hdr_v2={
-        'url': bytearray([ 102 ,108,111,119,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
-        'version': version.to_bytes(4,'little'),
-        'size': bytearray([0, 0, 0, 0]),
+    zmq_msg_hdr_v1={
+        'url': bytearray([ 102 ,108,111,119, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]),
+        'version': version.to_bytes(1,'little'),
+        'source_id': args_zmq_source_id.to_bytes(1, 'little'),
+        'size': bytearray([0, 0]),
         'msg_id': 0,
-        'source_id': bytearray([0,1,2,3])
     }
 
     print("ZMQ: loop")
@@ -1262,14 +1300,17 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_per
 
         print('ZMQ:' + str(msg_id))
 
-        zmq_msg_hdr_v2['msg_id']=msg_id.to_bytes(4,'little')
+        zmq_msg_hdr_v1['msg_id']=msg_id.to_bytes(4,'little')
 
         socket.send_multipart([
-            zmq_msg_hdr_v2['url']       \
-            +zmq_msg_hdr_v2['version']  \
-            +zmq_msg_hdr_v2['size']     \
+            zmq_msg_hdr_v1['url']           \
+            +zmq_msg_hdr_v1['version']      \
+            +zmq_msg_hdr_v1['source_id']    \
+            +zmq_msg_hdr_v1['size']         \
+            +zmq_msg_hdr_v1['msg_id']
             ,rec_comp
         ])
+
         msg_id=(msg_id+1) & 0xffffffff
         poller.poll()
 
@@ -1293,14 +1334,15 @@ if __name__ == '__main__':
     parser.add_argument('--collector-port', default="udp://0.0.0.0:2055")
     parser.add_argument('--ntopng', default='zmq://0.0.0.0:1234')
     parser.add_argument('--zmq-disable-compression', action='store_true', default=False)
-    parser.add_argument('--verbose', default="0")
+    parser.add_argument('--zmq-source-id', default="1", type=int)
+    parser.add_argument('--verbose', default="0", type=int)
     parser.add_argument('--performance', action='store_true', default=False)
     parser.add_argument('--version', action='store_true', default=False)
 
     args=parser.parse_args()
 
     if args.version:
-        print("0.0.2")
+        print("0.0.1")
         sys.exit(0)
 
     mp.set_start_method('spawn')
@@ -1312,6 +1354,7 @@ if __name__ == '__main__':
             args.zmq_disable_compression,
             args.verbose,
             args.performance,
+            args.zmq_source_id,
             rec_queue,
         )
     )
