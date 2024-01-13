@@ -1099,6 +1099,24 @@ def IPFIX_scan_field(message, field_offset):
 
     return (field_id, field_length, field_enterprise)
 
+def IPFIX_scan_record(message, field_offset, field_count):
+
+    field_list=[]
+    rec_len=0
+    for i in range(field_count):
+        (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset)
+
+        rec_len=rec_len+field_length
+
+        field_list.append((field_id, field_length, field_enterprise))
+
+        field_offset=field_offset+4
+        if(field_enterprise) != -1:
+            field_offset=field_offset+4
+
+    return (field_offset, rec_len, field_list) 
+
+
 def netflow_collector(args_collector_port, args_verbose, args_performance, q):
     templates={}
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -1152,17 +1170,7 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     field_list=[]
                     field_offset=rec_offset+4
 
-                    rec_len=0
-                    for i in range(field_count):
-                        (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset) 
-                      
-                        rec_len=rec_len+field_length
-
-                        field_list.append((field_id, field_length, field_enterprise))
-
-                        field_offset=field_offset+4
-                        if(field_enterprise) != -1:
-                            field_offset=field_offset+4
+                    (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
 
                     templates[ template_id ] = {
                          'fields': field_list,
@@ -1186,17 +1194,7 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
 
                 field_offset=rec_offset+6
 
-                rec_len=0
-                for s in range(field_count):
-                    (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset)
-
-                    rec_len=rec_len+field_length
-
-                    field_list.append((field_id, field_length, field_enterprise))
-
-                    field_offset=field_offset+4
-                    if(field_enterprise) != -1:
-                        field_offset=field_offset+4
+                (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
 
                 templates[ template_id ] = {
                      'fields': field_list,

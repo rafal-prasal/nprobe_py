@@ -1,4 +1,7 @@
 ## Changelog
+### 0.0.3
+* removing redunant code
+  * Netflow/set == 2 and Netflow/set == 3 are sharing record scan
 ### 0.0.2
 * protocols support
   * NetfFow/set == 3 
