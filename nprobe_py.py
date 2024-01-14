@@ -1088,27 +1088,25 @@ def parseAddress(address):
 
     return  (ipv4, port)
 
-def IPFIX_scan_field(message, field_offset):
-    field_id=int.from_bytes(message[field_offset:field_offset+2],'big')
-    field_length=int.from_bytes(message[field_offset+2:field_offset+4],'big')
-    field_enterprise=-1
-
-    if field_id & 0x8000:
-        field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
-        field_id = field_id ^ 0x8000
-
-    return (field_id, field_length, field_enterprise)
-
 def IPFIX_scan_record(message, field_offset, field_count):
 
     field_list=[]
     rec_len=0
     for i in range(field_count):
-        (field_id, field_length, field_enterprise) = IPFIX_scan_field(message, field_offset)
+
+        field_id=int.from_bytes(message[field_offset:field_offset+2],'big')
+        field_length=int.from_bytes(message[field_offset+2:field_offset+4],'big')
+        field_enterprise=-1
+
+        if field_id & 0x8000:
+            field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
+            field_id = field_id ^ 0x8000
 
         rec_len=rec_len+field_length
 
-        field_list.append((field_id, field_length, field_enterprise))
+        field_list.append(
+            (field_id, field_length, field_enterprise)
+        )
 
         field_offset=field_offset+4
         if(field_enterprise) != -1:
