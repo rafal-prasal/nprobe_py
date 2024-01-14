@@ -1,7 +1,12 @@
 ## Changelog
 ### 0.0.3
+* adding verbose dependent printing
 * removing redunant code
   * Netflow/set == 2 and Netflow/set == 3 are sharing record scan
+* NetFlow IPFIX
+  * adding expected sequence number, need to wait for set=2 or 3 to properly handle it
+  * one NetFlow message means now one zmq message
+  * fixed performance timers in case of multiple sets within NetFlow message
 ### 0.0.2
 * protocols support
   * NetfFow/set == 3 

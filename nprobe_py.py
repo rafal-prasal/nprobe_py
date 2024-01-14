@@ -1116,8 +1116,11 @@ def IPFIX_scan_record(message, field_offset, field_count):
 
     return (field_offset, rec_len, field_list) 
 
+def verbose_print(args_verbose, num, msg):
+    if num<=args_verbose:
+        print(msg)
 
-def netflow_collector(args_collector_port, args_verbose, args_performance, q):
+def netflow_collector(args_collector_port, args_performance, args_verbose, q):
     templates={}
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
@@ -1125,11 +1128,13 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
 
     print("Netflow: loop")
 
-    pkt_cnt=0
+    pkt_cnt=-1
+    next_sequence=0
 
     while True:
         message, address = server_socket.recvfrom(1500)
         start_processing=time.time_ns()
+        pkt_cnt=pkt_cnt+1
 
         msg_version = int.from_bytes(message[0:2], 'big')
 
@@ -1139,20 +1144,39 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
 
         msg_length  = int.from_bytes(message[2:4],'big')
         msg_export_time = int.from_bytes(message[4:8],'big')
-        msg_sequence_number = int.from_bytes(message[8:12],'big')
+        msg_sequence = int.from_bytes(message[8:12],'big')
         msg_observation_domain_id = int.from_bytes(message[12:16],'big')
 
-        print('NetFlow:'+str(pkt_cnt)+' ver:'+str(msg_version)+' seq:'+str(msg_sequence_number)+' dom:'+str(msg_observation_domain_id))
+        verbose_print(
+            args_verbose,
+            0,
+            'NetFlow:{cnt} ver:{version} seq:{sequence} exp:{next_sequence} dom:{domain_id} len:{length}'.format(
+                cnt=pkt_cnt,
+                version=msg_version,
+                sequence=msg_sequence,
+                next_sequence=next_sequence,
+                domain_id=msg_observation_domain_id,
+                length=msg_length
+            )
+        )
 
         data_offset=16
+        records = []
         while(data_offset<msg_length):
-            records = []
-
             set_id=int.from_bytes(message[data_offset:data_offset+2],'big')
             set_length=int.from_bytes(message[data_offset+2:data_offset+4],'big')
 
             set_offset=data_offset+4
-            print('NetFlow:'+str(pkt_cnt)+' set:'+str(set_id)+' len:'+str(set_length))
+
+            verbose_print(
+                args_verbose,
+                1,
+                'NetFlow:{cnt} set:{set} len:{length}'.format(
+                    cnt=pkt_cnt,
+                    set=set_id,
+                    length=set_length
+                )
+            )
 
             if set_id == 2:
                 rec_offset=set_offset
@@ -1160,7 +1184,15 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     template_id=int.from_bytes(message[rec_offset:rec_offset+2],'big')
                     field_count=int.from_bytes(message[rec_offset+2:rec_offset+4],'big')
 
-                    print('NetFlow:'+ str(pkt_cnt)+ ' tpl:'+str(template_id)+' num:' + str(field_count))
+                    verbose_print(
+                        args_verbose,
+                        2,
+                        'NetFlow:{cnt} tpl:{template} num:{count}'.format(
+                            cnt=pkt_cnt,
+                            template=template_id,
+                            count=field_count
+                        )
+                    )
 
                     if field_count==0:
                        del templates[template_id]
@@ -1173,8 +1205,9 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                     (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
 
                     templates[ template_id ] = {
-                         'fields': field_list,
-                         'length': rec_len
+                        'set_id': set_id,
+                        'fields': field_list,
+                        'length': rec_len
                     }
 
                     rec_offset=field_offset
@@ -1185,7 +1218,16 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                 field_count=int.from_bytes(message[rec_offset+2:rec_offset+4],'big')
                 scope_count=int.from_bytes(message[rec_offset+4:rec_offset+6],'big')
 
-                print('NetFlow:'+ str(pkt_cnt)+ ' opt:'+str(template_id)+' num:' + str(field_count) + 'scp:' + str(scope_count))
+                verbose_print(
+                    args_verbose,
+                    2,
+                    'NetFlow:{cnt} tpl:{template} num:{count} scp:{scope}'.format(
+                        cnt=pkt_cnt,
+                        template=template_id,
+                        count=field_count,
+                        scope=scope_count
+                    )
+                )
 
                 if field_count==0:
                     del templates[template_id]
@@ -1197,13 +1239,24 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                 (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
 
                 templates[ template_id ] = {
-                     'fields': field_list,
-                     'length': rec_len
+                    'set_id' : set_id,
+                    'fields': field_list,
+                    'length': rec_len
                 }
 
             elif set_id in templates:
                 rec_offset=set_offset
                 field_offset=rec_offset
+
+                verbose_print(
+                    args_verbose,
+                    2,
+                    'NetFlow:{cnt} rec:{template} typ:{type}'.format(
+                        cnt=pkt_cnt,
+                        template=set_id,
+                        type=templates[ set_id ]['set_id'],
+                    )
+                )
 
                 while (rec_offset<data_offset+set_length):
                     record = {}
@@ -1223,30 +1276,28 @@ def netflow_collector(args_collector_port, args_verbose, args_performance, q):
                         field_offset=field_offset+field_length
 
                     records.append(record)
-
                     rec_offset=field_offset
-                set_offset=rec_offset
 
-            end_processing = time.time_ns()
-
-            if(len(records)>0):
-                q.put(records)
-
-            end_queueing = time.time_ns()
-
-            pkt_cnt=pkt_cnt+1
             data_offset=data_offset+set_length
 
-            if args_performance:
-                print("netflow_timers(ns) " \
-                    +str(end_queueing-start_processing) \
-                    +" / " \
-                    +str(end_processing-start_processing) \
-                    +" / " \
-                    +str(end_queueing-end_processing)
-                )
+        next_sequence=(msg_sequence+len(records))&0xffffffff
+        end_parsing = time.time_ns()
 
-def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_performance, args_zmq_source_id, q):
+        if(len(records)>0):
+            q.put(records)
+
+        end_queueing = time.time_ns()
+
+        if args_performance:
+            print(
+                "netflow_timers(ns) {processing} / {parsing} / {queueing}".format(
+                    processing=end_queueing-start_processing,
+                    parsing=end_parsing-start_processing,
+                    queueing=end_queueing-end_parsing
+                )
+            )
+
+def zmq_broker(args_ntopng, args_zmq_disable_compression, args_performance, args_zmq_source_id, args_verbose, q):
 
     context = zmq.Context.instance()
     socket = context.socket(zmq.PUB)
@@ -1279,9 +1330,20 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_per
 
     msg_id=0
 
+    zmq_msg_hdr=zmq_msg_hdr_v1['url']    \
+            +zmq_msg_hdr_v1['version']      \
+            +zmq_msg_hdr_v1['source_id']    \
+            +zmq_msg_hdr_v1['size']         
+
     while True:
         records = q.get()
         start_processing=time.time_ns()
+
+        verbose_print(
+            args_verbose,
+            0,
+            'ZMQ:{msg_id}'.format(msg_id=msg_id)
+        )
 
         if records is None:
             break
@@ -1292,20 +1354,19 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_per
             len_json = len(rec_comp)
             rec_comp=(0).to_bytes(1, 'big')+zlib.compress(rec_comp, 6)
             len_comp=len(rec_comp)
-            print('copression: '+str(len_comp)+ ' / ' +str(len_json))
+            print(
+                'ZMQ:{msg_id} comp: {after} / {before}'.format(
+                    msg_id=msg_id,
+                    after=len_comp,
+                    before=len_json
+                )
+            )
 
         end_compressing=time.time_ns()
 
-        print('ZMQ:' + str(msg_id))
-
-        zmq_msg_hdr_v1['msg_id']=msg_id.to_bytes(4,'little')
-
         socket.send_multipart([
-            zmq_msg_hdr_v1['url']           \
-            +zmq_msg_hdr_v1['version']      \
-            +zmq_msg_hdr_v1['source_id']    \
-            +zmq_msg_hdr_v1['size']         \
-            +zmq_msg_hdr_v1['msg_id']
+            zmq_msg_hdr           \
+            +msg_id.to_bytes(4,'little')
             ,rec_comp
         ])
 
@@ -1315,12 +1376,12 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_verbose, args_per
         end_processing=time.time_ns()
 
         if args_performance:
-            print("zmq_timers(ns) " \
-                +str(end_processing-start_processing) \
-                +" / " \
-                +str(end_compressing-start_processing) \
-                +" / " \
-                +str(end_processing-end_compressing)
+            print(
+                'zmq_timers(ns) {processing} / {compressing} / {sending}'.format(
+                    processing=end_processing-start_processing,
+                    compressing=end_compressing-start_processing,
+                    sending=end_processing-end_compressing
+                )
             )
 
     poller.unregister(socket)
@@ -1350,9 +1411,9 @@ if __name__ == '__main__':
         args=(
             args.ntopng,
             args.zmq_disable_compression,
-            args.verbose,
             args.performance,
             args.zmq_source_id,
+            args.verbose,
             rec_queue,
         )
     )
@@ -1362,8 +1423,8 @@ if __name__ == '__main__':
     try:
         netflow_collector(
             args.collector_port,
-            args.verbose,
             args.performance,
+            args.verbose,
             rec_queue,
         )
     except Exception as e:
