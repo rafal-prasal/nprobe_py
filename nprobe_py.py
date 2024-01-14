@@ -1152,13 +1152,14 @@ def netflow_collector(args_collector_port, args_performance, args_verbose, q):
         verbose_print(
             args_verbose,
             0,
-            'NetFlow:{cnt} ver:{version} seq:{sequence} exp:{next_sequence} dom:{domain_id} len:{length}',
+            'NetFlow:{cnt} ver:{version} seq:{sequence} exp:{next_sequence} dom:{domain_id} len:{length} drp:{dropped}',
             cnt=pkt_cnt,
             version=msg_version,
             sequence=msg_sequence,
             next_sequence=next_sequence,
             domain_id=msg_observation_domain_id,
-            length=msg_length
+            length=msg_length,
+            dropped = (msg_sequence - next_sequence)
         )
 
         data_offset=16
