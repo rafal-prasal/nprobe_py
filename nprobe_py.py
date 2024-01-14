@@ -40,17 +40,16 @@ sys.stderr = os.fdopen(sys.stderr.fileno(), 'w', buf_arg)
 #https://www.iana.org/assignments/ipfix/ipfix.xhtml
 
 def unknown(bytes):
-    return '0x'+str(bytes.hex())
+    return f'0x{bytes.hex()}'
 
 def hexadecimal(bytes):
-    return '0x'+str(bytes.hex())
+    return f'0x{bytes.hex()}'
 
 def unsigned(bytes):
     return int.from_bytes(bytes, 'big')
 
 def macaddress(bytes):
-    mac=str(hex(int.from_bytes(bytes, 'big')))
-    return mac[2:4]+':'+mac[4:6]+':'+mac[6:8]+':'+mac[8:10]+':'+mac[10:12]+':'+mac[12:14]
+    return ':'.join(f'{b:02x}' for b in bytes)
 
 def ipv4address(bytes):
     return ipaddress.IPv4Address(bytes).exploded
