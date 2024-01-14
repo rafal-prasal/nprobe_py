@@ -7,6 +7,7 @@
   * adding expected sequence number, need to wait for set=2 or 3 to properly handle it
   * one NetFlow message means now one zmq message
   * fixed performance timers in case of multiple sets within NetFlow message
+* general performance fixes
 ### 0.0.2
 * protocols support
   * NetfFow/set == 3 
