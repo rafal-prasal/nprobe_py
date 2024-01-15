@@ -1417,7 +1417,7 @@ if __name__ == '__main__':
     args=parser.parse_args()
 
     if args.version:
-        print("0.0.3")
+        print("0.0.4")
         sys.exit(0)
 
     mp.set_start_method('spawn')
