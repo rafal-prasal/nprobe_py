@@ -1,5 +1,6 @@
 ## Changelog
 ### 0.0.3
+* adding -T parameter with @NTOPNG@ template
 * adding verbose dependent printing
 * removing redunant code
   * Netflow/set == 2 and Netflow/set == 3 are sharing record scan

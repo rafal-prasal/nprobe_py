@@ -7,7 +7,8 @@ services:
         "/nprobe_py.py",
         "--performance",
         "--ntopng", "tcp://*:1234",
-        "--collector-port", "udp://0.0.0.0:2055"
+        "--collector-port", "udp://0.0.0.0:2055",
+        "-T", "@NTOPNG@"
     ]
     ports:
       - 2055:2055/udp

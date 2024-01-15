@@ -1087,7 +1087,7 @@ def parseAddress(address):
 
     return  (ipv4, port)
 
-def IPFIX_scan_record(message, field_offset, field_count):
+def IPFIX_scan_record(message, netflow_fields, field_offset, field_count):
 
     field_list=[]
     rec_len=0
@@ -1101,11 +1101,18 @@ def IPFIX_scan_record(message, field_offset, field_count):
             field_enterprise = int.from_bytes(message[field_offset+4:field_offset+8],'big')
             field_id = field_id ^ 0x8000
 
-        rec_len=rec_len+field_length
+        if field_enterprise in IPFIX_fields \
+            and field_id in IPFIX_fields[ field_enterprise ] \
+            and 'nprobe' in IPFIX_fields[ field_enterprise ][ field_id ]:
 
-        field_list.append(
-            (field_id, field_length, field_enterprise)
-        )
+            IPFIX_field = IPFIX_fields[ field_enterprise ][ field_id ]
+
+            if IPFIX_field['nprobe'] in netflow_fields:
+                field_list.append(
+                    (field_id, rec_len, rec_len+field_length, field_enterprise, IPFIX_field['nprobe'], IPFIX_field['from_bytes'])
+                )
+
+        rec_len=rec_len+field_length
 
         field_offset=field_offset+4
         if(field_enterprise) != -1:
@@ -1121,13 +1128,24 @@ def verbose_print(args_verbose, num, msg, **kwargs):
             )
         )
 
-def netflow_collector(args_collector_port, args_performance, args_verbose, q):
+def collector_fields(args_fields):
+    ret = {}
+    for f in args_fields:
+        ret[ f ] = ''
+
+    return ret
+
+def netflow_collector(args_collector_port, args_performance, args_fields, args_verbose, q):
     templates={}
+
+    netflow_fields = collector_fields(args_fields)
+
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    server_socket.bind( parseAddress(args_collector_port) ) 
+    server_socket.bind( parseAddress(args_collector_port) )
 
     print("Netflow: loop")
+    print("Netflow fields: "+ ", ".join(netflow_fields))
 
     pkt_cnt=-1
     next_sequence=0
@@ -1201,7 +1219,7 @@ def netflow_collector(args_collector_port, args_performance, args_verbose, q):
                     field_list=[]
                     field_offset=rec_offset+4
 
-                    (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
+                    (field_offset, rec_len, field_list) = IPFIX_scan_record(message, netflow_fields, field_offset, field_count)
 
                     templates[ template_id ] = {
                         'set_id': set_id,
@@ -1234,7 +1252,7 @@ def netflow_collector(args_collector_port, args_performance, args_verbose, q):
 
                 field_offset=rec_offset+6
 
-                (field_offset, rec_len, field_list) = IPFIX_scan_record(message, field_offset, field_count)
+                (field_offset, rec_len, field_list) = IPFIX_scan_record(message, netflow_fields, field_offset, field_count)
 
                 templates[ template_id ] = {
                     'set_id' : set_id,
@@ -1255,25 +1273,19 @@ def netflow_collector(args_collector_port, args_performance, args_verbose, q):
                     type=templates[ set_id ]['set_id'],
                 )
 
+                rec_length = templates[ set_id ]['length']
+
                 while (rec_offset<data_offset+set_length):
                     record = {}
                     for f in templates[set_id]['fields']:
-                        (field_id, field_length, field_enterprise) = f
+                        (f_id, f_offset_start, f_offset_end, f_enterprise, f_nprobe, f_from_bytes) = f
 
-                        if field_enterprise in IPFIX_fields \
-                            and field_id in IPFIX_fields[ field_enterprise ] \
-                            and 'nprobe' in IPFIX_fields[ field_enterprise ][ field_id ]:
-
-                            IPFIX_field = IPFIX_fields[ field_enterprise ][ field_id ]
-
-                            record[ IPFIX_field['nprobe'] ] = IPFIX_field['from_bytes'](
-                                                            message[field_offset:field_offset+field_length]
-                                                        )
-
-                        field_offset=field_offset+field_length
+                        record[ f_nprobe ] = f_from_bytes(
+                            message[rec_offset+f_offset_start:rec_offset+f_offset_end]
+                        )
 
                     records.append(record)
-                    rec_offset=field_offset
+                    rec_offset+=rec_length
 
             data_offset=data_offset+set_length
 
@@ -1397,6 +1409,7 @@ if __name__ == '__main__':
     parser.add_argument('--zmq-source-id', default="1", type=int)
     parser.add_argument('--verbose', default="0", type=int)
     parser.add_argument('--performance', action='store_true', default=False)
+    parser.add_argument('-T', default='%IPV4_SRC_ADDR %IPV4_DST_ADDR %INPUT_SNMP %OUTPUT_SNMP %IN_PKTS %IN_BYTES %FIRST_SWITCHED %LAST_SWITCHED %L4_SRC_PORT %L4_DST_PORT %TCP_FLAGS %PROTOCOL %SRC_TOS %SRC_AS %DST_AS')
     parser.add_argument('--version', action='store_true', default=False)
 
     args=parser.parse_args()
@@ -1425,6 +1438,10 @@ if __name__ == '__main__':
         netflow_collector(
             args.collector_port,
             args.performance,
+            args.T.upper().replace(
+                '@NTOPNG@',
+                "%IN_SRC_MAC %OUT_DST_MAC %INPUT_SNMP %OUTPUT_SNMP %SRC_VLAN %IPV4_SRC_ADDR %IPV4_DST_ADDR %L4_SRC_PORT %L4_DST_PORT %IPV6_SRC_ADDR %IPV6_DST_ADDR %IP_PROTOCOL_VERSION %PROTOCOL %L7_PROTO %L7_CONFIDENCE %IN_BYTES %IN_PKTS %OUT_BYTES %OUT_PKTS %FIRST_SWITCHED %LAST_SWITCHED %CLIENT_TCP_FLAGS %SERVER_TCP_FLAGS %L7_PROTO_RISK %L7_RISK_SCORE %EXPORTER_IPV4_ADDRESS %DIRECTION %SAMPLING_INTERVAL %TOTAL_FLOWS_EXP %NPROBE_IPV4_ADDRESS %NPROBE_INSTANCE_NAME %POST_NAT_SRC_IPV4_ADDR %POST_NAT_DST_IPV4_ADDR %POST_NAPT_SRC_TRANSPORT_PORT %POST_NAPT_DST_TRANSPORT_PORT"
+            ).replace('%','').split(' '),
             args.verbose,
             rec_queue,
         )
