@@ -1349,6 +1349,9 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_performance, args
         records = q.get()
         start_processing=time.time_ns()
 
+        if records is None:
+            break
+
         verbose_print(
             args_verbose,
             0,
@@ -1356,10 +1359,8 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_performance, args
             msg_id=msg_id
         )
 
-        if records is None:
-            break
-
         rec_comp=json.dumps(records).encode('ascii')
+        end_jsoning=time.time_ns()
 
         if not args_zmq_disable_compression:
             len_json = len(rec_comp)
@@ -1391,9 +1392,10 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_performance, args
             verbose_print(
                 args_verbose,
                 0,
-                'zmq_timers(ns) {processing} / {compressing} / {sending}',
+                'zmq_timers(ns) {processing} / {jsoning} / {compressing} / {sending}',
                 processing=end_processing-start_processing,
-                compressing=end_compressing-start_processing,
+                jsoning=end_jsoning-start_processing,
+                compressing=end_compressing-end_jsoning,
                 sending=end_processing-end_compressing
             )
 
