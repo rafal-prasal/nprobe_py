@@ -20,7 +20,7 @@ import sys
 import time
 import zmq
 import multiprocessing as mp
-import json
+import orjson
 import zlib
 import ipaddress
 import argparse
@@ -1359,7 +1359,7 @@ def zmq_broker(args_ntopng, args_zmq_disable_compression, args_performance, args
             msg_id=msg_id
         )
 
-        rec_comp=json.dumps(records).encode('ascii')
+        rec_comp=orjson.dumps(records)
         end_jsoning=time.time_ns()
 
         if not args_zmq_disable_compression:

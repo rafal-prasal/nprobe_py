@@ -9,6 +9,7 @@
   * one NetFlow message means now one zmq message
   * fixed performance timers in case of multiple sets within NetFlow message
 * general performance fixes
+* switching from json to orjson
 ### 0.0.2
 * protocols support
   * NetfFow/set == 3 
@@ -18,5 +19,5 @@
 	  * msg_id - to monitor dropping of ntop/zmq messages
 * parameter:
   * --zmq-source-id (default = 1)
-### 0.0.1 (2023.04.06)
+### 0.0.1
 * initial release
