@@ -1,5 +1,6 @@
 ## Changelog
 ### 0.0.4
+* securing nprobe_py image
 ### 0.0.3
 * adding -T parameter with @NTOPNG@ template
 * adding verbose dependent printing
