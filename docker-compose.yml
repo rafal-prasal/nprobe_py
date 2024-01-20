@@ -4,7 +4,7 @@ services:
   nprobe_py:
     image: nprobe_py:latest
     command: [
-        "/nprobe_py.py",
+        "/app/nprobe_py.py",
         "--performance",
         "--ntopng", "tcp://*:1234",
         "--collector-port", "udp://0.0.0.0:2055",
